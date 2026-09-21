@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Лента{% endblock %}
+
+{% block content %}
+<div class="feed-header">
+    <h1>Лента</h1>
+    <p>Вы вошли как <strong>{{ user['username'] }}</strong></p>
+</div>
+
+<section class="card composer">
+    <h2>Новый пост</h2>
+    <form method="post" action="{{ url_for('create_post') }}">
+        <textarea name="content" rows="4" placeholder="Что у вас нового?" required></textarea>
+        <button type="submit">Опубликовать</button>
+    </form>
+</section>
+
+<section class="posts">
+    {% if posts %}
+        {% for post in posts %}
+            <article class="card post">
+                <div class="post-header">
+                    <strong>{{ post['username'] }}</strong>
+                    <span>{{ post['created_at'] }}</span>
+                </div>
+                <p>{{ post['content'] }}</p>
+            </article>
+        {% endfor %}
+    {% else %}
+        <div class="card empty-state">
+            <p>Пока никто не опубликовал постов. Будьте первым!</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
