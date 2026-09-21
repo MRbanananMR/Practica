@@ -1,19 +1,30 @@
 {% extends 'base.html' %}
 
-{% block title %}Вход{% endblock %}
+{% block title %}{{ t('login') }}{% endblock %}
 
 {% block content %}
-<div class="card auth-card">
-    <h1>Вход</h1>
-    <form method="post">
-        <label for="username">Логин</label>
-        <input id="username" name="username" type="text" required>
+<div class="auth-wrap">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <span class="eyebrow">Welcome back</span>
+            <h1>{{ t('login') }}</h1>
+        </div>
 
-        <label for="password">Пароль</label>
-        <input id="password" name="password" type="password" required>
+        <form method="post" class="auth-form">
+            <div class="field">
+                <label for="username">{{ t('username') }}</label>
+                <input id="username" name="username" type="text" required>
+            </div>
 
-        <button type="submit">Войти</button>
-    </form>
-    <p class="switch-link">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
+            <div class="field">
+                <label for="password">{{ t('password') }}</label>
+                <input id="password" name="password" type="password" required>
+            </div>
+
+            <button type="submit">{{ t('login') }}</button>
+        </form>
+
+        <p class="switch-link">{{ t('dont_have_account') }} <a href="{{ url_for('register') }}">{{ t('register') }}</a></p>
+    </div>
 </div>
 {% endblock %}

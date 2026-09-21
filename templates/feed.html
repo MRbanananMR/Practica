@@ -1,36 +1,56 @@
 {% extends 'base.html' %}
 
-{% block title %}Лента{% endblock %}
+{% block title %}{{ t('feed') }}{% endblock %}
 
 {% block content %}
-<div class="feed-header">
-    <h1>Лента</h1>
-    <p>Вы вошли как <strong>{{ user['username'] }}</strong></p>
-</div>
-
-<section class="card composer">
-    <h2>Новый пост</h2>
-    <form method="post" action="{{ url_for('create_post') }}">
-        <textarea name="content" rows="4" placeholder="Что у вас нового?" required></textarea>
-        <button type="submit">Опубликовать</button>
-    </form>
-</section>
-
-<section class="posts">
-    {% if posts %}
-        {% for post in posts %}
-            <article class="card post">
-                <div class="post-header">
-                    <strong>{{ post['username'] }}</strong>
-                    <span>{{ post['created_at'] }}</span>
-                </div>
-                <p>{{ post['content'] }}</p>
-            </article>
-        {% endfor %}
-    {% else %}
-        <div class="card empty-state">
-            <p>Пока никто не опубликовал постов. Будьте первым!</p>
+<div class="feed-shell">
+    <div class="feed-header card compact-card">
+        <div>
+            <span class="eyebrow">Home</span>
+            <h1>{{ t('feed_title') }}</h1>
         </div>
-    {% endif %}
-</section>
+        <div class="user-pill">{{ user['username'] }}</div>
+    </div>
+
+    <section class="card composer">
+        <div class="composer-top">
+            <div class="avatar">{{ user['username'][0].upper() }}</div>
+            <div>
+                <strong>{{ user['username'] }}</strong>
+                <p>{{ t('logged_as') }}</p>
+            </div>
+        </div>
+
+        <form method="post" action="{{ url_for('create_post') }}" class="composer-form">
+            <textarea name="content" rows="4" placeholder="{{ t('what_new') }}" required></textarea>
+            <div class="composer-actions">
+                <span class="status-text">Public post</span>
+                <button type="submit">{{ t('publish') }}</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="posts">
+        {% if posts %}
+            {% for post in posts %}
+                <article class="card post">
+                    <div class="post-header">
+                        <div class="post-author">
+                            <div class="mini-avatar">{{ post['username'][0].upper() }}</div>
+                            <div>
+                                <strong>{{ post['username'] }}</strong>
+                                <span>{{ post['created_at'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p>{{ post['content'] }}</p>
+                </article>
+            {% endfor %}
+        {% else %}
+            <div class="card empty-state">
+                <p>{{ t('no_posts') }}</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}

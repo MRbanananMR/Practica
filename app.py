@@ -5,6 +5,76 @@ from flask import Flask, current_app, flash, g, redirect, render_template, reque
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
+TRANSLATIONS = {
+    "ru": {
+        "app_name": "CHAT",
+        "feed": "Лента",
+        "logout": "Выйти",
+        "login": "Войти",
+        "register": "Регистрация",
+        "enter_login_and_password": "Введите логин и пароль.",
+        "user_exists": "Пользователь с таким именем уже существует.",
+        "registration_success": "Регистрация прошла успешно.",
+        "invalid_credentials": "Неверный логин или пароль.",
+        "logged_in": "Вы вошли в систему.",
+        "logged_out": "Вы вышли из системы.",
+        "post_empty": "Пост не может быть пустым.",
+        "post_published": "Пост опубликован.",
+        "username": "Логин",
+        "password": "Пароль",
+        "create_account": "Создать аккаунт",
+        "already_have_account": "Уже есть аккаунт?",
+        "dont_have_account": "Нет аккаунта?",
+        "feed_title": "Лента",
+        "logged_as": "Вы вошли как",
+        "new_post": "Новый пост",
+        "what_new": "Что у вас нового?",
+        "publish": "Опубликовать",
+        "no_posts": "Пока никто не опубликовал постов. Будьте первым!",
+        "language_ru": "RU",
+        "language_en": "EN",
+    },
+    "en": {
+        "app_name": "CHAT",
+        "feed": "Feed",
+        "logout": "Log out",
+        "login": "Log in",
+        "register": "Register",
+        "enter_login_and_password": "Please enter a username and password.",
+        "user_exists": "A user with this name already exists.",
+        "registration_success": "Registration was successful.",
+        "invalid_credentials": "Invalid username or password.",
+        "logged_in": "You have logged in.",
+        "logged_out": "You have logged out.",
+        "post_empty": "The post cannot be empty.",
+        "post_published": "Post published.",
+        "username": "Username",
+        "password": "Password",
+        "create_account": "Create account",
+        "already_have_account": "Already have an account?",
+        "dont_have_account": "Don't have an account?",
+        "feed_title": "Feed",
+        "logged_as": "You are logged in as",
+        "new_post": "New post",
+        "what_new": "What's new?",
+        "publish": "Publish",
+        "no_posts": "No posts yet. Be the first one!",
+        "language_ru": "RU",
+        "language_en": "EN",
+    },
+}
+
+
+def get_locale():
+    return session.get("lang", "ru") if "lang" in session else "ru"
+
+
+def t(key):
+    locale = get_locale()
+    translation = TRANSLATIONS.get(locale, TRANSLATIONS["ru"])
+    return translation.get(key, key)
+
+
 def get_db():
     if "db" not in g:
         db = sqlite3.connect(current_app.config["DATABASE"])
@@ -50,11 +120,23 @@ def create_app(test_config=None):
 
     os.makedirs(app.instance_path, exist_ok=True)
 
+    @app.context_processor
+    def inject_translations():
+        return {"t": t, "current_lang": get_locale}
+
     @app.teardown_appcontext
     def close_db(exception=None):
         db = g.pop("db", None)
         if db is not None:
             db.close()
+
+    @app.route("/set_language/<lang>")
+    def set_language(lang):
+        if lang in TRANSLATIONS:
+            session["lang"] = lang
+        else:
+            session["lang"] = "ru"
+        return redirect(request.referrer or url_for("index"))
 
     with app.app_context():
         init_db()
@@ -88,7 +170,7 @@ def create_app(test_config=None):
             password = request.form.get("password", "")
 
             if not username or not password:
-                flash("Введите логин и пароль.")
+                flash(t("enter_login_and_password"))
                 return render_template("register.html")
 
             db = get_db()
@@ -98,7 +180,7 @@ def create_app(test_config=None):
             ).fetchone()
 
             if existing_user is not None:
-                flash("Пользователь с таким именем уже существует.")
+                flash(t("user_exists"))
                 return render_template("register.html")
 
             db.execute(
@@ -111,7 +193,7 @@ def create_app(test_config=None):
                 "SELECT id FROM users WHERE username = ?", (username,),
             ).fetchone()
             session["user_id"] = user["id"]
-            flash("Регистрация прошла успешно.")
+            flash(t("registration_success"))
             return redirect(url_for("index"))
 
         return render_template("register.html")
@@ -129,11 +211,11 @@ def create_app(test_config=None):
             ).fetchone()
 
             if user is None or not check_password_hash(user["password_hash"], password):
-                flash("Неверный логин или пароль.")
+                flash(t("invalid_credentials"))
                 return render_template("login.html")
 
             session["user_id"] = user["id"]
-            flash("Вы вошли в систему.")
+            flash(t("logged_in"))
             return redirect(url_for("index"))
 
         return render_template("login.html")
@@ -141,7 +223,7 @@ def create_app(test_config=None):
     @app.route("/logout")
     def logout():
         session.pop("user_id", None)
-        flash("Вы вышли из системы.")
+        flash(t("logged_out"))
         return redirect(url_for("login"))
 
     @app.route("/posts/create", methods=["POST"])
@@ -151,7 +233,7 @@ def create_app(test_config=None):
 
         content = request.form.get("content", "").strip()
         if not content:
-            flash("Пост не может быть пустым.")
+            flash(t("post_empty"))
             return redirect(url_for("index"))
 
         db = get_db()
@@ -161,7 +243,7 @@ def create_app(test_config=None):
         )
         db.commit()
 
-        flash("Пост опубликован.")
+        flash(t("post_published"))
         return redirect(url_for("index"))
 
     return app
